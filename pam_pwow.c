@@ -1,5 +1,3 @@
-#include <security/_pam_aconf.h>
-
 #include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
@@ -9,7 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "pam_pwow.h"
-#include "common.h"
 #include <security/pam_modules.h>
 
 /* Print log */
@@ -92,7 +89,7 @@ PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, cons
   retval = pam_get_item(pamh, PAM_AUTHTOK,(const void **)&password);
   if( retval != PAM_SUCCESS){
     _pam_log(LOG_ERR, "Couln't retrive user's passwrod");
-    return -2
+    return -2;
   }
 
   retval = check_user(username,password);
@@ -111,7 +108,7 @@ PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, cons
     return PAM_SERVICE_ERR;
   }
   return PAM_IGNORE;
-
+}
   PAM_EXTERN
 int pam_sm_setcred(pam_handle_t *pamh, int flags,
 		   int argc, const char **argv)
@@ -126,4 +123,3 @@ int pam_sm_acct_mgmt(pam_handle_t *pamh, int flags,
     return PAM_SUCCESS;
 }
 
-}

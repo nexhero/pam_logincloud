@@ -1,6 +1,3 @@
-#ifndef _PAM_PWOW_H
-#define _PAM_PWOW_H
-
 #include <security/pam_appl.h>
 
 // Defie arguments
@@ -9,5 +6,5 @@
 
 // Define the name of the module.
 #ifndef MODULE_NAME
-#DEFINE MODULE_NAME "pam_pwow"
+#define MODULE_NAME "pam_pwow"
 #endif
