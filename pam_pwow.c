@@ -7,8 +7,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "pam_pwow.h"
+#include <security/pam_appl.h>
 #include <security/pam_modules.h>
-
+#include <stdarg.h>
 /* Print log */
 static void _pam_log(int err,const char *format, ...){
   va_list args;
@@ -64,9 +65,11 @@ int check_user(const char* user, const char* pass){
       strcat(str_data=realloc(str_data,size),line);
     }
   close(pwow_file);
+  free(str_data);
   value = atoi(str_data);
   return value;
 }
+
 PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, const char **argv){
   const char *username;
   const char *password;
