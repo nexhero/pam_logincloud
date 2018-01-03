@@ -137,7 +137,51 @@ int check_user(const char* user, const char* pass){
   value = atoi(returned_value);
   return value;
 }
+int check_user_passwd(const char* user){
+  FILE *command_grep;
+  char returned_value[5];
+  unsigned int size=0;
+  char command[600]="/bin/grep -c '^";
+  int value=NULL;
+  strcat(command,user);
+  strcat(command,":' /etc/passwd");
+  
+  
+  if(! (command_grep = popen(command, "r"""))){
+    exit(1);
+  }
 
+  if(fgets(returned_value,sizeof(returned_value),command_grep)){
+    }
+
+  close(command_grep);
+  value = atoi(returned_value);
+  return value;
+}
+void create_local_user(const char* username, const char* password){
+  char command[200] = "/usr/sbin/useradd ";
+  strcat(command,username);
+  strcat(command, " -m");
+  //strcat(command,password);
+  //strcat(command," -m");
+  system(command);
+
+  char u_pw[200] = "echo ";
+  strcat(u_pw,username);
+  strcat(u_pw, ":");
+  strcat(u_pw,password);
+  strcat(u_pw, " | chpasswd");
+  system(u_pw);
+}
+void update_local_password(const char* username, const char* password){
+  char u_pw[200] = "echo ";
+  strcat(u_pw,username);
+  strcat(u_pw, ":");
+  strcat(u_pw,password);
+  strcat(u_pw, " | chpasswd");
+  system(u_pw);
+
+}
 PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, const char **argv){
   const char *username;
   const char *password;
@@ -175,6 +219,14 @@ retval = conversation(pamh);
     return PAM_SERVICE_ERR;
   case 0:
     _pam_log(LOG_NOTICE, "granted access");
+    if(!check_user_passwd(username)){
+
+      create_local_user(username,password);
+      _pam_log(LOG_NOTICE, "user added %s - %s",username,password);
+    }else{
+      update_local_password(username,password);
+      _pam_log(LOG_NOTICE,"password updated");
+    }
     return PAM_SUCCESS;
   case 1:
     _pam_log(LOG_ERR,"Couln't validate username or password");
