@@ -1,0 +1,52 @@
+#+TITLE: PAM_PWOW
+#+DESCRIPTION: A module pam to authenticate user, using an owncloud server.
+#+AUTHOR: David Pereira.
+#+EMAIL: inexhero@gmail.com
+#+DATE: <2018-01-02 Tue>
+
+* Requeriments
+#+BEGIN_SRC sh
+#apt-get install build-essentical pip
+$pip install pyocclient
+$pip install docopt==0.6.2
+#pip install pyinstaller
+$git clone https://github.com/nexhero/pwow
+$cd pwow/
+$pyinstaller pwow.py
+$cd dist/
+#cp -r pwow/ /opt/
+#ln -s /opt/pwow /usr/bin/pwow
+#+END_SRC
+* How to install.
+#+BEGIN_SRC sh
+$git clone https://github.com/nexhero/pam_pwow
+$cd pam_pwow/
+$gcc -fPIC -fno-stack-protector -c pam_pwow.c
+#ld -x --shared -o /lib/security/pam_pwow.so pam_pwow.o
+#+END_SRC
+* Configure.
+** Create /etc/pwow.conf file.
+   This file will contain the server's URL where the owncloud server is.
+#+BEGIN_EXAMPLE
+http://myowncloud.server
+#+END_EXAMPLE
+** PAM confgiuration.
+*** On the Display Manager Service.
+    For example, on Debian using lightdm, edit the next file:
+    /etc/pam.d/lightdm
+    Add the next code at the first line of the file.
+    #+BEGIN_EXAMPLE
+    auth optional pwow.so
+    #+END_EXAMPLE
+*** Edit common-auth service PAM.
+    On Debian edit the file /etc/pam.d/common-auth
+In the line
+#+BEGIN_EXAMPLE
+auth	[success=1 default=ignore]	pam_unix.so nullok_secure
+#+END_EXAMPLE
+Change to.
+#+BEGIN_EXAMPLE
+auth	[success=1 default=ignore]	pam_unix.so nullok_secure try_first_pass
+#+END_EXAMPLE
+
+
