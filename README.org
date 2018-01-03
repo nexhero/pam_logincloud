@@ -48,5 +48,7 @@ Change to.
 #+BEGIN_EXAMPLE
 auth	[success=1 default=ignore]	pam_unix.so nullok_secure try_first_pass
 #+END_EXAMPLE
+* Support.
+If you are having issues, please let us know. David Pereira <inexhero@gmail.com>
 
 
