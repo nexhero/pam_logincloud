@@ -8,3 +8,4 @@
 #ifndef MODULE_NAME
 #define MODULE_NAME "pam_pwow"
 #endif
+int conversation(pam_handle_t *);

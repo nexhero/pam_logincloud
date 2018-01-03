@@ -10,6 +10,78 @@
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 #include <stdarg.h>
+#include <security/_pam_macros.h>
+
+
+static int converse(pam_handle_t *pamh,
+		    struct pam_message **message,
+		    struct pam_response **response)
+{
+    int retval;
+    const struct pam_conv *conv;
+
+    retval = pam_get_item(pamh, PAM_CONV, (const void **) &conv ) ;
+    if (retval == PAM_SUCCESS)
+	retval = conv->conv(1, (const struct pam_message **)message,
+			    response, conv->appdata_ptr);
+	
+    return retval; /* propagate error status */
+}
+
+
+static char *_pam_delete(register char *xx)
+{
+    _pam_overwrite(xx);
+    _pam_drop(xx);
+    return NULL;
+}
+
+/*
+ * This is a conversation function to obtain the user's password
+ */
+int conversation(pam_handle_t *pamh)
+{
+    struct pam_message msg[2],*pmsg[2];
+    struct pam_response *resp;
+    int retval;
+    char * token = NULL;
+    
+    pmsg[0] = &msg[0];
+    msg[0].msg_style = PAM_PROMPT_ECHO_OFF;
+    msg[0].msg = "Password: ";
+
+    /* so call the conversation expecting i responses */
+    resp = NULL;
+    retval = converse(pamh, pmsg, &resp);
+
+    if (resp != NULL) {
+	const char * item;
+	/* interpret the response */
+	if (retval == PAM_SUCCESS) {     /* a good conversation */
+	    token = x_strdup(resp[0].resp);
+	    if (token == NULL) {
+		return PAM_AUTHTOK_RECOVER_ERR;
+	    }
+	}
+
+	/* set the auth token */
+	retval = pam_set_item(pamh, PAM_AUTHTOK, token);
+	token = _pam_delete(token);   /* clean it up */
+	if ( (retval != PAM_SUCCESS) ||
+	     (retval = pam_get_item(pamh, PAM_AUTHTOK, (const void **)&item))
+	     != PAM_SUCCESS ) {
+	    return retval;
+	}
+	
+	_pam_drop_reply(resp, 1);
+    } else {
+	retval = (retval == PAM_SUCCESS)
+	    ? PAM_AUTHTOK_RECOVER_ERR:retval ;
+    }
+
+    return retval;
+}
+
 /* Print log */
 static void _pam_log(int err,const char *format, ...){
   va_list args;
@@ -23,7 +95,7 @@ static void _pam_log(int err,const char *format, ...){
 static int ctrl=0;
 
 //read the arguments
-
+/*
 static int _pam_parse(int argc, const char **argv){
   for(ctrl = 0; argc -- > 0; ++argv){
     if(!strcmp(*argv,"debug")){
@@ -34,7 +106,7 @@ static int _pam_parse(int argc, const char **argv){
   }
   return ctrl;
 }
-
+*/
 /*
   Check de user and password on the owncloud server
 
@@ -46,8 +118,7 @@ static int _pam_parse(int argc, const char **argv){
 
 int check_user(const char* user, const char* pass){
   FILE *pwow_file;
-  char line[128];
-  char* str_data=NULL; // Buffer to store the string
+  char returned_value[5];
   unsigned int size=0;
   char command[600]="/usr/bin/pwow ";
   int value=NULL;
@@ -59,14 +130,11 @@ int check_user(const char* user, const char* pass){
     exit(1);
   }
 
-  while (fgets(line,sizeof(line),pwow_file))
-    {
-      size+=strlen(line);
-      strcat(str_data=realloc(str_data,size),line);
+  if(fgets(returned_value,sizeof(returned_value),pwow_file)){
     }
+
   close(pwow_file);
-  free(str_data);
-  value = atoi(str_data);
+  value = atoi(returned_value);
   return value;
 }
 
@@ -75,20 +143,25 @@ PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, cons
   const char *password;
   int retval =  PAM_AUTH_ERR;
 
-  ctrl = _pam_parse(argc,argv);
+  // ctrl = _pam_parse(argc,argv);
 
   // get the username from pam
-
+  
   retval = pam_get_user(pamh, &username,NULL);
   if((retval != PAM_SUCCESS) || (!username)){
-    if(ctrl & PAM_DEBUG_ARG){
+    if(PAM_DEBUG_ARG){
       _pam_log(LOG_DEBUG,"can't get the username");
       return PAM_SERVICE_ERR;
     }
   }
 
   // get the password
-
+retval = conversation(pamh);
+     if (retval != PAM_SUCCESS) {
+	 _pam_log(LOG_ERR, "could not obtain password for `%s'",
+		  username);
+	 return -2;
+}
   retval = pam_get_item(pamh, PAM_AUTHTOK,(const void **)&password);
   if( retval != PAM_SUCCESS){
     _pam_log(LOG_ERR, "Couln't retrive user's passwrod");
