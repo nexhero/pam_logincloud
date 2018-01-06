@@ -100,21 +100,12 @@ static void _pam_log(int err,const char *format, ...){
   closelog();
 }
 
-/*
-  Check de user and password on the owncloud server
-
-  return values:
-  -1 = Conecction to the server failed =/
-  0 - OK! :D
-  1 = username or password failed :(
-*/
-
 int check_user(const char* user, const char* pass){
   FILE *pwow_file;
   char returned_value[5];
   unsigned int size=0;
   char command[600]="/usr/bin/logincloud ";
-  int value=NULL;
+  int value=0;
   strcat(command,user);
   strcat(command," ");
   strcat(command,pass);
@@ -125,8 +116,11 @@ int check_user(const char* user, const char* pass){
 
   if(fgets(returned_value,sizeof(returned_value),pwow_file)){
   }
+	
+  pclose(pwow_file);
+    _pam_log(LOG_ERR,"valor del comando: %s",returned_value);
 
-  close(pwow_file);
+  printf("valor del comando: %s",returned_value);
   value = atoi(returned_value);
   return value;
 }
@@ -137,7 +131,7 @@ int check_user_passwd(const char* user){
   char returned_value[5];
   unsigned int size=0;
   char command[600]="/bin/grep -c '^";
-  int value=NULL;
+  int value=0;
   strcat(command,user);
   strcat(command,":' /etc/passwd");
   
@@ -149,7 +143,7 @@ int check_user_passwd(const char* user){
   if(fgets(returned_value,sizeof(returned_value),command_grep)){
   }
 
-  close(command_grep);
+  pclose(command_grep);
   value = atoi(returned_value);
   return value;
 }
@@ -213,12 +207,13 @@ PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, cons
 
   //validate username and password.
   retval = check_user(username,password);
+  printf("valor de check_user function %d",retval);
   switch(retval){
-  case -2:
+  case 1:
     _pam_log(LOG_ERR,"/etc/logincloud.conf file doesn't exist");
     return PAM_SERVICE_ERR;
   
-  case -1:
+  case 2:
     _pam_log(LOG_ERR,"Connection to the server failed");
     return PAM_SERVICE_ERR;
   case 0:
@@ -231,19 +226,21 @@ PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, cons
       _pam_log(LOG_NOTICE,"Password updated for %s",username);
     }
     return PAM_SUCCESS;
-  case 1:
+  case 3:
     _pam_log(LOG_ERR,"Service name doesn't exist in the /etc/logincloud.conf");
     return PAM_AUTH_ERR;
-  case 2:
+  case 4:
     _pam_log(LOG_ERR,"Service class object could't be created");
     return PAM_AUTH_ERR;
-  case 3:
+  case 5:
     _pam_log(LOG_ERR,"Can't validate username or password");
     return PAM_AUTH_ERR;
   default:
     _pam_log(LOG_ERR,"Internal module error");
     return PAM_SERVICE_ERR;
   }
+    _pam_log(LOG_ERR,"PAM will ignore this module");
+
   return PAM_IGNORE;
 }
 PAM_EXTERN
