@@ -154,7 +154,7 @@ void create_local_user(const char* username, const char* password){
   //add new user
   char command[200] = "/usr/sbin/useradd ";
   strcat(command,username);
-  strcat(command, " -m");
+  strcat(command, " -m -s /bin/bash");
   system(command);
 
   //assing the password to the new user
