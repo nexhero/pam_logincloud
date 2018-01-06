@@ -113,7 +113,7 @@ int check_user(const char* user, const char* pass){
   FILE *pwow_file;
   char returned_value[5];
   unsigned int size=0;
-  char command[600]="/usr/bin/pwow ";
+  char command[600]="/usr/bin/logincloud ";
   int value=NULL;
   strcat(command,user);
   strcat(command," ");
@@ -214,6 +214,10 @@ PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, cons
   //validate username and password.
   retval = check_user(username,password);
   switch(retval){
+  case -2:
+    _pam_log(LOG_ERR,"/etc/logincloud.conf file doesn't exist");
+    return PAM_SERVICE_ERR;
+  
   case -1:
     _pam_log(LOG_ERR,"Connection to the server failed");
     return PAM_SERVICE_ERR;
@@ -228,7 +232,13 @@ PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, cons
     }
     return PAM_SUCCESS;
   case 1:
-    _pam_log(LOG_ERR,"Couln't validate username or password");
+    _pam_log(LOG_ERR,"Service name doesn't exist in the /etc/logincloud.conf");
+    return PAM_AUTH_ERR;
+  case 2:
+    _pam_log(LOG_ERR,"Service class object could't be created");
+    return PAM_AUTH_ERR;
+  case 3:
+    _pam_log(LOG_ERR,"Can't validate username or password");
     return PAM_AUTH_ERR;
   default:
     _pam_log(LOG_ERR,"Internal module error");
