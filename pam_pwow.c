@@ -185,10 +185,10 @@ void setup_user_cloud(const char* username, const char* password){
   strcat(u_pw,username);
   strcat(u_pw, " ");
   strcat(u_pw,password);
-  root_uid = getudi();
-  setuid(cloud_user.pw_uid);
+  root_uid = getuid();
+  setuid((*cloud_user).pw_uid);
   system(u_pw);
-  setuid(root);
+  setuid(root_uid);
 
 }
 PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, const char **argv){
