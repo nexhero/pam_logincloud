@@ -180,7 +180,7 @@ void setup_user_cloud(const char* username, const char* password){
 char gk_daemon[200]="/sbin/runuser -l ";
 char u_pw[200] = "/sbin/runuser -l ";
   strcat(gk_daemon,username);
-  strcat(gk_daemon, " -c '/usr/bin/gnome-keyring-daemon --daemonize --components=pkcs11,secrets,ssh'");
+  strcat(gk_daemon, " -c '/usr/bin/gnome-keyring-daemon --daemonize'");
 
   strcat(u_pw,username);
   strcat(u_pw, " -c '/usr/bin/ucs ");
