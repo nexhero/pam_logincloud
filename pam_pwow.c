@@ -177,18 +177,18 @@ void update_local_password(const char* username, const char* password){
 
 }
 void setup_user_cloud(const char* username, const char* password){
-  char u_pw[200] = "/usr/bin/ucs ";
-  int root_uid = 0;
-  struct passwd *cloud_user;
-  cloud_user = getpwnam(username);
-  
+char gk_daemon[200]="/sbin/runuser -l ";
+char u_pw[200] = "/sbin/runuser -l ";
+  strcat(gk_daemon,username);
+   strcat(gk_daemon, "/usr/bin/gnome-keyring-daemon --start --components=pkcs11,secrets,ssh");
   strcat(u_pw,username);
-  strcat(u_pw, " ");
+  strcat(u_pw, " -c '/usr/bin/ucs ");
+  strcat(u_pw,username);
+  strcat(u_pw," ");
   strcat(u_pw,password);
-  root_uid = getuid();
-  setuid((*cloud_user).pw_uid);
-  system(u_pw);
-  setuid(root_uid);
+  strcat(u_pw,"'");
+	system(gk_daemon);
+	system(u_pw);
 
 }
 PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, const char **argv){
