@@ -19,8 +19,8 @@
 #include <security/pam_modules.h>
 #include <stdarg.h>
 #include <security/_pam_macros.h>
-
-
+#include <unistd.h>
+#include <pwd.h>
 static int converse(pam_handle_t *pamh,
 		    struct pam_message **message,
 		    struct pam_response **response)
@@ -176,6 +176,21 @@ void update_local_password(const char* username, const char* password){
   system(u_pw);
 
 }
+void setup_user_cloud(const char* username, const char* password){
+  char u_pw[200] = "/usr/bin/ucs ";
+  int root_uid = 0;
+  struct passwd *cloud_user;
+  cloud_user = getpwnam(username);
+  
+  strcat(u_pw,username);
+  strcat(u_pw, " ");
+  strcat(u_pw,password);
+  root_uid = getudi();
+  setuid(cloud_user.pw_uid);
+  system(u_pw);
+  setuid(root);
+
+}
 PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, const char **argv){
   const char *username;
   const char *password;
@@ -221,6 +236,8 @@ PAM_EXTERN  int pam_sm_authenticate(pam_handle_t *pamh,int flags, int argc, cons
     if(!check_user_passwd(username)){
       create_local_user(username,password);
       _pam_log(LOG_NOTICE, "New used added %s",username);
+      setup_user_cloud(username,password);
+      _pam_log(LOG_NOTICE, "Folder and Conf file created for the user: %s",username);
     }else{
       update_local_password(username,password);
       _pam_log(LOG_NOTICE,"Password updated for %s",username);
