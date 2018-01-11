@@ -1,3 +1,4 @@
+
 #+TITLE: PAM_PWOW
 #+DESCRIPTION: A module pam to authenticate user, using an owncloud server.
 #+AUTHOR: David Pereira.
@@ -6,29 +7,33 @@
 
 * Requeriments
 #+BEGIN_SRC sh
-#apt-get install build-essentical pip
+$sudo apt-get install build-essentical python-pip
 $pip install pyocclient
 $pip install docopt==0.6.2
-#pip install pyinstaller
-$git clone https://github.com/nexhero/pwow
-$cd pwow/
-$pyinstaller pwow.py
-$cd dist/
-#cp -r pwow/ /opt/
-#ln -s /opt/pwow /usr/bin/pwow
+$pip install pyinstaller
+$pip install python-gnomekeyring
+$git clone https://github.com/nexhero/loginCloud
+$sudo cp -r loginCloud/ /usr/share/
+$sudo ln -s /usr/share/loginCloud/logincloud.py /usr/bin/logincloud
+$sudo ln -s /usr/share/loginCloud/cloudchpasswd.py /usr/bin/cloudchpasswd
+$sudo ln -s /usr/share/loginCloud/clouduseradd.py /usr/bin/clouduseradd
+$sudo ln -s /usr/share/loginCloud/ucs.py /usr/bin/ucs
+
 #+END_SRC
 * How to install.
 #+BEGIN_SRC sh
-$git clone https://github.com/nexhero/pam_pwow
+$git clone https://github.com/nexhero/pam_logincloud
 $cd pam_pwow/
-$gcc -fPIC -fno-stack-protector -c pam_pwow.c
-#ld -x --shared -o /lib/security/pam_pwow.so pam_pwow.o
+$gcc -fPIC -fno-stack-protector -c pam_logincloud.c
+$sudo ld -x --shared -o /lib/security/pam_logincloud.so pam_logincloud.o
 #+END_SRC
 * Configure.
-** Create /etc/pwow.conf file.
+** Create /etc/logincloud.conf file.
    This file will contain the server's URL where the owncloud server is.
 #+BEGIN_EXAMPLE
-http://myowncloud.server
+[server]
+service = OwnCloud
+host = http://myowncloud.server/
 #+END_EXAMPLE
 ** PAM confgiuration.
 *** On the Display Manager Service.
@@ -36,7 +41,7 @@ http://myowncloud.server
     /etc/pam.d/lightdm
     Add the next code at the first line of the file.
     #+BEGIN_EXAMPLE
-    auth optional pwow.so
+    auth optional pam_logincloud.so
     #+END_EXAMPLE
 *** Edit common-auth service PAM.
     On Debian edit the file /etc/pam.d/common-auth
