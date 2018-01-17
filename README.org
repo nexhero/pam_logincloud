@@ -1,17 +1,27 @@
 
-#+TITLE: PAM_PWOW
-#+DESCRIPTION: A module pam to authenticate user, using an owncloud server.
+#+TITLE: PAM_LOGINCLOUD
+#+DESCRIPTION: A module pam to authenticate user, using an owncloud or nextcloud server.
 #+AUTHOR: David Pereira.
 #+EMAIL: inexhero@gmail.com
 #+DATE: <2018-01-02 Tue>
-
-* Requeriments
+* What the heck is this?
+  Pam_logincloud is a pam module that use owncloud or nextcloud user database to verify user credentianls on Linux system.
+The idea is simple, convert any Linux distribution into a cloud OS, something similar to Chrome OS or Chromium OS,
+but not using any google service.
+* How it's works?
+  It's seprate into two parts, [[https://github.com/nexhero/loginCloud][loginCloud]] it's a pack of python scripts that verify users on the server, and create new ones in the local system.
+[[https://github.com/nexhero/pam_logincloud][pam_logincloud]] this is a pam module that use loginCloud's script in any Login Manager to authenticate. What it does is simple:
+- Read the /etc/logincloud.conf file. (Service name and URL host are here).
+- Check the user if exist in the server.
+- If exist and the credentials are correct, then create a new local user with the same username and password.
+- Auto-generate the owncloud.cfg file in the user directory and set the password on gnomekeyring for autologing
+* How to install.
+** Installing loginCloud
 #+BEGIN_SRC sh
-$sudo apt-get install build-essentical python-pip
+$sudo apt-get install build-essential python-pip python-gnomekeyring
 $pip install pyocclient
 $pip install docopt==0.6.2
 $pip install pyinstaller
-$pip install python-gnomekeyring
 $git clone https://github.com/nexhero/loginCloud
 $sudo cp -r loginCloud/ /usr/share/
 $sudo ln -s /usr/share/loginCloud/logincloud.py /usr/bin/logincloud
@@ -20,30 +30,30 @@ $sudo ln -s /usr/share/loginCloud/clouduseradd.py /usr/bin/clouduseradd
 $sudo ln -s /usr/share/loginCloud/ucs.py /usr/bin/ucs
 
 #+END_SRC
-* How to install.
+** Installing the pam module
 #+BEGIN_SRC sh
 $git clone https://github.com/nexhero/pam_logincloud
-$cd pam_pwow/
+$cd pam_logincloud/
 $gcc -fPIC -fno-stack-protector -c pam_logincloud.c
 $sudo ld -x --shared -o /lib/security/pam_logincloud.so pam_logincloud.o
 #+END_SRC
-* Configure.
-** Create /etc/logincloud.conf file.
+** Configure.
+*** Create /etc/logincloud.conf file.
    This file will contain the server's URL where the owncloud server is.
 #+BEGIN_EXAMPLE
 [server]
 service = OwnCloud
 host = http://myowncloud.server/
 #+END_EXAMPLE
-** PAM confgiuration.
-*** On the Display Manager Service.
-    For example, on Debian using lightdm, edit the next file:
-    /etc/pam.d/lightdm
-    Add the next code at the first line of the file.
-    #+BEGIN_EXAMPLE
-    auth optional pam_logincloud.so
-    #+END_EXAMPLE
-*** Edit common-auth service PAM.
+*** PAM confgiuration.
+**** On the Display Manager Service.
+     For example, on Debian using lightdm, edit the next file:
+     /etc/pam.d/lightdm
+     Add the next code at the first line of the file.
+     #+BEGIN_EXAMPLE
+     auth optional pam_logincloud.so
+     #+END_EXAMPLE
+**** Edit common-auth service PAM.
     On Debian edit the file /etc/pam.d/common-auth
 In the line
 #+BEGIN_EXAMPLE
