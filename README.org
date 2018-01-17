@@ -63,6 +63,9 @@ Change to.
 #+BEGIN_EXAMPLE
 auth	[success=1 default=ignore]	pam_unix.so nullok_secure try_first_pass
 #+END_EXAMPLE
+* Todo.
+** TODO Able to change user password and the image profile. 
+** TODO Sync Apps.
 * Support.
 If you are having issues, please let us know. David Pereira <inexhero@gmail.com>
 
